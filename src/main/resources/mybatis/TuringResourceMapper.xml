@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bonc.turing.cms.user.dao.mapper.TuringResourceMapper">
+
+    <select id="findCmsResourceList" resultType="java.util.HashMap">
+        SELECT  sui.nickname as name,tr.id,tr.title,IFNULL(tr.like_num,0) as likeNum,IFNULL(tr.download_num,0) as downloadNum,
+        UNIX_TIMESTAMP(tr.create_time)*1000 as createTime,IFNULL(cs.is_home_hide,0) as isHide,
+        IFNULL(cs.is_elite,0) as isElite,IFNULL(cs.is_top,0) as isTop
+        from turing_resource tr
+        LEFT JOIN sys_user_info sui on sui.guid=tr.guid
+        LEFT JOIN  cms_special cs on cs.special_id = tr.id
+        WHERE 1=1
+        <if test="null!=params.titleSearch and ''!= params.titleSearch">
+            and  tr.title like concat('%',#{params.titleSearch},'%')
+        </if>
+        <if test="null!=params.nameSearch and ''!= params.nameSearch">
+            and  sui.nickname like  concat('%',#{params.nameSearch},'%')
+        </if>
+        <if test="null!=params.resourceType and ''!= params.resourceType">
+            and  tr.type=#{params.resourceType}
+        </if>
+        <if test="null!=params.startTime and -1!= params.startTime and null!=params.endTime and -1!= params.endTime">
+            and  UNIX_TIMESTAMP(tr.create_time)*1000 BETWEEN #{params.startTime} and #{params.endTime}
+        </if>
+        <if test="params.isHide==0">
+            and  cs.is_home_hide is null or cs.is_home_hide=0
+        </if>
+        <if test="params.isHide==1">
+            and  cs.is_home_hide = 1
+        </if>
+        <if test="1 == params.sortType">
+           order by tr.create_time
+        </if>
+        <if test="2 == params.sortType">
+           order by tr.like_num
+        </if>
+
+    </select>
+
+</mapper>

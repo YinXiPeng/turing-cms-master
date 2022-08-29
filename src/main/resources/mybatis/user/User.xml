@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bonc.turing.cms.manage.mapper.user.UserMapper">
+
+    <select id="getUserListOfB" resultType="java.util.HashMap">
+SELECT
+	sui.nickname,
+	cum.guid,
+	cum.school_name schoolName,
+	cum.school_id schoolId,
+	cum.college_name collegeName,
+	cum.phone,
+	cum.mail,
+	cum.role,
+	cum.people_id peopleId,
+	cum.real_name realName
+FROM
+	cos_user_msg cum,
+	sys_user_info sui
+WHERE
+	cum.guid = sui.guid
+	AND sui.nickname LIKE CONCAT('%',#{keyWord},'%')
+    </select>
+
+	<insert id="insertPermission">
+		insert cms_user_permissions(`guid`,`permissions_id`) values (#{guid},#{permission})
+	</insert>
+</mapper>

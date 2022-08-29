@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bonc.turing.cms.exercise.dao.mapper.QtTextBookMapper">
+
+    <select id="getBackStageTextBookList" resultType="com.bonc.turing.cms.exercise.dto.BackStageTextBookDTO">
+   SELECT a.id,a.book_name as bookName,a.author_name as authorName,a.price,a.status,count(distinct e.id) as questionNum,count(distinct  c.guid) as teacherNum,count(distinct d.guid) as studentNum
+   FROM qt_text_book  a
+   left join qt_text_book_paging b on a.id=b.text_book_id
+   left join qt_user_and_text_book c on a.id = c.text_book_id  and c.role=0
+   left join qt_user_and_text_book d on a.id = d.text_book_id  and d.role=1
+   left join  qt_text_book_binding e on b.id = e.paging_id and e.type = 1
+   where a.is_deleted = 0 and a.type = 0
+   group by a.id
+   order by a.create_time desc
+    </select>
+
+   <select id="getVideoCourseList" resultType="com.bonc.turing.cms.exercise.dto.VideoCourseListDTO">
+   SELECT a.id,a.book_name as bookName,a.author_name as authorName,a.price,a.status,count(distinct c.guid) as studentNum
+   FROM qt_text_book  a
+   left join qt_text_book_paging b on a.id=b.text_book_id
+   left join qt_user_and_text_book c on a.id = c.text_book_id  and c.role=1
+   where a.is_deleted = 0 and a.type = 1
+   group by a.id
+   order by a.create_time desc
+    </select>
+
+</mapper>

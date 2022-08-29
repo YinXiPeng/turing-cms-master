@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bonc.turing.cms.manage.mapper.model.NotebookMapper">
+
+
+	<!-- 编辑更新notebook -->
+	<update id="updateNotebook" >
+		update notebook
+		<set>
+			<if test="param.notebookName != null and '' != param.notebookName">notebook_name=#{param.notebookName},</if>
+			<if test="param.notebookDescription != null and '' != param.notebookDescription">
+				notebook_description=#{param.notebookDescription},
+			</if>
+			<if test="param.notebookPath != null and '' != param.notebookPath">
+				notebook_path=#{param.notebookPath},
+			</if>
+			<if test="param.kernelId != null and '' != param.kernelId">kernel_id=#{param.kernelId},</if>
+			<if test="param.isService != null and '' != param.isService">is_service=#{param.isService},</if>
+			<if test="param.isPublic != null and '' != param.isPublic">is_public=#{param.isPublic},</if>
+			<if test="param.isDelete != null and '' != param.isDelete">is_delete=#{param.isDelete},</if>
+			<if test="param.typeId != null and '' != param.typeId">type_id=#{param.typeId},</if>
+			<if test="param.envId != null and '' != param.envId">env_id=#{param.envId}</if>
+		</set>
+		where notebook_id=#{param.notebookId}
+	</update>
+
+	<!-- 通过id查询notebook -->
+	<select id="getNotebook" resultType="java.util.HashMap">
+		select
+			UNIX_TIMESTAMP(create_time)*1000 createTime,type_id typeId,notebook_description notebookDescription,notebook_id notebookId,is_delete isDelete,kernel_id kernelId,
+			env_id envId,notebook_name notebookName,notebook_path notebookPath,is_public isPublic,guid,UNIX_TIMESTAMP(last_modified)*1000 lastModified,type_id typeId,version,parent_id parentId,execute_time executeTime
+		from notebook where notebook_id=#{notebookId}
+	</select>
+
+
+	<!-- 通过id查询notebook临时表 -->
+	<select id="getNotebookTemp" resultType="java.util.HashMap">
+		select temp_id tempId,notebook_id notebookId,guid,notebook_name notebookName,notebook_description notebookDescription,notebook_path notebookPath,kernel_id kernelId,
+				is_public isPublic,is_delete isDelete,type_id typeId,env_id envId,UNIX_TIMESTAMP(create_time)*1000 createTime,UNIX_TIMESTAMP(last_modified)*1000 lastModified
+		from notebook_temp where notebook_id=#{notebookId}
+	</select>
+
+
+	<!-- 编辑更新notebook临时表 -->
+	<update id="updateNotebookTemp">
+		update notebook_temp
+		<set>
+			<if test="param.notebookName != null and '' != param.notebookName">notebook_name=#{param.notebookName},</if>
+			<if test="param.notebookDescription != null and '' != param.notebookDescription">
+				notebook_description=#{param.notebookDescription},
+			</if>
+			<if test="param.notebookPath != null and '' != param.notebookPath">
+				notebook_path=#{param.notebookPath},
+			</if>
+			<if test="param.kernelId != null and '' != param.kernelId">kernel_id=#{param.kernelId},</if>
+			<if test="param.isPublic != null and '' != param.isPublic">is_public=#{param.isPublic},</if>
+			<if test="param.isDelete != null and '' != param.isDelete">is_delete=#{param.isDelete},</if>
+			<if test="param.typeId != null and '' != param.typeId">type_id=#{param.typeId},</if>
+			<if test="param.envId != null and '' != param.envId">env_id=#{param.envId},</if>
+			<if test="param.active != null and '' != param.active">active=#{param.active}</if>
+		</set>
+		where notebook_id=#{param.notebookId}
+	</update>
+
+	<!-- 竞赛模块添加模型 -->
+	<insert id="saveCompetition">
+		insert into
+		competition_notebook(competition_id,notebook_id)
+		value (#{competitionId},#{notebookId})
+	</insert>
+
+    <!-- 删除竞赛相关的notebook -->
+    <delete id="deleteCompetition">
+        delete from competition_notebook where competition_id=#{competitionId} and notebook_id=#{notebookId}
+    </delete>
+
+	<!-- 查找notebook的结果集分数 -->
+	<select id="getScore" resultType="java.util.HashMap">
+		SELECT scorea,scoreb FROM d_s_result WHERE d_s_result.id in (SELECT result_id FROM notebook_result WHERE notebook_id=#{notebookId})
+	</select>
+
+	<!-- 通过父id获取版本列表 -->
+	<select id="versionListByParentId" resultType="java.util.HashMap">
+		select UNIX_TIMESTAMP(create_time)*1000 createTime,type_id typeId,notebook_description notebookDescription,notebook_id notebookId,
+		is_delete isDelete,kernel_id kernelId,env_id envId,notebook_name notebookName,notebook_path notebookPath,is_public isPublic,
+		guid,UNIX_TIMESTAMP(last_modified)*1000 lastModified,type_id typeId,version,parent_id parentId
+		from notebook where guid=#{guid} and parent_id=#{parentId}
+	</select>
+
+	<!-- 竞赛下的数据集id -->
+	<select id="getCompetitionDataSet" resultType="java.util.HashMap">
+		SELECT d_s_data_source_def_info.id dataSourceId FROM d_s_data_source_def_info WHERE d_s_data_source_def_info.id in(
+		SELECT competition_info.datasource_id FROM competition_info WHERE competition_info.competition_id =#{competitionId})
+	</select>
+
+
+
+</mapper>

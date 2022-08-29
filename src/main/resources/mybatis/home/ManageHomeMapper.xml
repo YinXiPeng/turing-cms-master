@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bonc.turing.cms.home.mapper.ManageHomeMapper">
+    <select id="findActivities" resultType="com.bonc.turing.cms.home.domain.ActivityDTO">
+       select id,title,content_url as contentUrl,location,unix_timestamp(time)*1000 as time,status
+       from activity
+       where 1=1
+       <if test="null!=title">
+           and title like "%" #{title} "%"
+       </if>
+       order by create_time desc
+    </select>
+
+    <update id="updateDataSourceDef">
+       update D_S_DATA_SOURCE_DEF set like_num=like_num+1 where id = #{id}
+	</update>
+
+    <select id="findDataSourceDefId" resultType="java.lang.String">
+       select DATA_SOURCE_DEF_ID from D_S_DATA_SOURCE_DEF_INFO where id = #{id}
+	</select>
+
+    <insert id="insertDsLikeUser" >
+       insert into d_s_like_user(id,give_like,guid,data_source_def_id)
+       values(#{id},#{giveLike},#{guid},#{dataSourceDefId})
+    </insert>
+
+    <select id="findDsLikeUser" resultType="java.lang.String">
+       select id from d_s_like_user where data_source_def_id=#{dataSourceDefId}  and  guid=#{guid}
+	</select>
+
+
+    <update id="updateDataSourceDefDiscussNum">
+       update D_S_DATA_SOURCE_DEF set discuss_num=discuss_num-1 where id = #{id}
+	</update>
+
+    <update id="deleteSourceDefInfo">
+       delete from  D_S_DATA_SOURCE_DEF_INFO where id = #{id}
+	</update>
+    
+    <select id="findHistoryVersionId" resultType="java.lang.String">
+        select history_version_id from D_S_DATA_SOURCE_DEF_INFO where id = #{id}
+    </select>
+
+
+    <select id="findDataSetMsgById" resultType="java.util.HashMap">
+        select * from d_s_data_source_def_info where id=#{id}
+    </select>
+
+    <select id="findByDictionaryName" resultType="java.util.HashMap">
+        select * from crd_dictionary where dictionary_name=#{name}
+    </select>
+
+</mapper>

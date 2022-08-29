@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bonc.turing.cms.exercise.dao.mapper.QtTextBookBindingMapper">
+
+    <select id="findByQuestionId" resultType="java.util.HashMap">
+        SELECT qtbb.type,qtbp.text_book_id textBookId,qtbp.chapter_id chapterId,qtbb.title,qtbp.begin_page beginPage,qtbp.end_page endPage,
+        qtbb.title_number titleNumber,qtbb.language,qtbb.code,qtb.book_name bookName,qc.chapter_name chapterName from qt_text_book_binding qtbb
+        LEFT JOIN qt_text_book_paging qtbp ON qtbb.paging_id=qtbp.id
+        LEFT JOIN qt_text_book qtb ON qtbp.text_book_id=qtb.id LEFT JOIN qt_chapter qc ON qtbp.chapter_id=qc.id WHERE qtbb.title_number=#{qid}
+    </select>
+
+    <select id="getProjectListByDictionaryName" parameterType="java.lang.String"
+            resultType="com.alibaba.fastjson.JSONObject">
+        select
+        id,
+        parent_id as parentId ,
+        is_parent as isParent,
+        dictionary_name as dictionaryName ,
+        dictionary_type as dictionaryType ,
+        dictionary_remark as dictionaryRemark
+        from crd_dictionary
+        where dictionary_name = #{dictionaryName}
+    </select>
+
+    <select id="getProjectListByParentId" parameterType="java.lang.String" resultType="com.alibaba.fastjson.JSONObject">
+        select
+        id,
+        parent_id as parentId ,
+        is_parent as isParent,
+        dictionary_name as dictionaryName ,
+        dictionary_type as dictionaryType ,
+        dictionary_remark as dictionaryRemark
+        from crd_dictionary
+        where parent_id = #{parentId}
+    </select>
+
+
+    <select id="getQuestionByTextBookId" resultType="com.alibaba.fastjson.JSONObject">
+        SELECT
+	IF (qar.id IS NULL, 0, 1) hasAnswered,
+	IFNULL(qar.is_true,0) isTrue,
+	qar.user_answer userAnswer,
+	qtbb.title,
+	qq.qid,
+	qq.choose_options chooseOptions,
+	qq.choose_type chooseType,
+	qq.question_description questionDescription,
+	qq.question_difficulty questionDifficulty,
+	qq.question_direction questionDirection,
+	qq.question_label questionLabel,
+	qq.question_name questionName,
+	qq.question_type questionType
+FROM
+    qt_text_book_paging qtbp
+LEFT JOIN qt_text_book_binding qtbb ON qtbp.id=qtbb.paging_id
+LEFT JOIN qt_question qq ON qtbb.title_number = qq.qid
+LEFT JOIN qt_answer_record qar
+ON qar.begin_page = qtbp.begin_page
+AND qar.end_page = qtbp.end_page
+AND qar.chapter_id = qtbp.chapter_id
+AND qar.refer_id = qtbp.text_book_id
+AND qar.question_id = qtbb.title_number
+AND qar.guid = #{guid}
+WHERE
+	qtbb.type = 1
+AND qq.question_status = 1
+AND qtbp.id=#{id}
+    </select>
+
+
+    <select id="findPagingListByTextBookIdAndIsFree" resultType="com.bonc.turing.cms.exercise.domain.QtTextBookPaging">
+        select * from qt_text_book_paging qtbp left join qt_chapter qc on qtbp.text_book_id=qc.text_book_id where qc.type=0 and qtbp.text_book_id=#{textBookId}
+    </select>
+
+</mapper>

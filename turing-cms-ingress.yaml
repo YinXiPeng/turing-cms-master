@@ -1,0 +1,18 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-cms-turing
+  namespace: turing-online
+spec:
+  rules:
+  # 主机域名，需要在本地绑定节点ip
+  - host: turing.bonc.com.cn
+    http:
+  # 如果paths下有具体的路径，如/demo，需要与后端提供真实服务的path一致，这里即nginx下需要有/demo路径
+      paths:
+      - path: /cms
+        backend:
+         # 后端服务名
+         serviceName: cms-turing
+         # 后端服务监听端口，区别于提供真实服务的容器监听端口
+         servicePort: 8004

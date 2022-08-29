@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bonc.turing.cms.manage.mapper.CompetitionInfoMapper">
+
+    <select id="findCompetition" resultType="com.bonc.turing.cms.manage.entity.competition.CmsCompetitionInfo">
+		SELECT
+	competition_id as competitionId,
+	competition_name as competitionName,
+	competition_status as competitionStatus,
+	is_need_team as isNeedTeam
+FROM
+	competition_info
+WHERE
+	competition_id IN (
+		SELECT
+			competition_id
+		FROM
+			judge
+		WHERE
+			judge_id = #{guid}
+	)
+	</select>
+
+	<select id="findFinalCompetition" resultType="com.bonc.turing.cms.manage.entity.competition.CmsCompetitionInfo">
+		SELECT
+	competition_id as competitionId,
+	competition_name as competitionName,
+	competition_status as competitionStatus,
+	is_need_team as isNeedTeam
+FROM
+	competition_info
+WHERE
+	competition_id IN (
+		SELECT
+			competition_id
+		FROM
+			judge
+		WHERE
+			judge_id = #{guid}
+			is_final=1
+	)
+	</select>
+
+	<select id="findFinalJudge" resultType="com.bonc.turing.cms.manage.entity.Judge">
+		SELECT * from judge WHERE judge_id = #{judgeId} and competition_id = #{competitionId} and is_final=1
+	</select>
+
+	<select id="findTeamCompetition" resultType="com.bonc.turing.cms.manage.entity.TeamsCompetition">
+		select competition_id competitionId , team_id teamId from teams_competition where competition_id = #{competitionId}
+	</select>
+
+
+
+</mapper>

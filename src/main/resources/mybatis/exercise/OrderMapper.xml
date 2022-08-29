@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bonc.turing.cms.exercise.dao.mapper.OrderMapper">
+
+    <select id="getTextBookOrder" resultType="java.util.HashMap">
+        select oi.order_id orderId,sui.username userName,sui.nickname,sui.guid,qtb.id,qtb.name bookName,oi.price,unix_timestamp(oi.create_time)*1000 createTime,unix_timestamp(oi.order_time)*1000 orderTime,oi.status,sui.phone,IFNULL(oi.remarks,'') remarks,oi.source
+        from order_info oi left join sys_user_info sui on oi.user_id=sui.guid left join cos_course qtb on qtb.id=oi.product_id where qtb.id is not null
+        and oi.status=#{type}
+        <if test="null != keyWord and !''.equals(keyWord)">
+            and (oi.order_id LIKE concat('%',#{keyWord},'%') or sui.nickname LIKE concat('%',#{keyWord},'%') or sui.phone LIKE concat('%',#{keyWord},'%'))
+        </if>
+        <if test="null != textBookId and !''.equals(textBookId)">
+            and qtb.id=#{textBookId}
+        </if>
+    </select>
+
+    <select id="getOrderByProductId" resultType="java.util.HashMap">
+        select oi.order_id orderId,sui.username userName,sui.nickname,sui.guid,oi.price,unix_timestamp(oi.create_time)*1000 createTime,unix_timestamp(oi.order_time)*1000 orderTime,oi.status,sui.phone,IFNULL(oi.remarks,'') remarks
+        from order_info oi left join sys_user_info sui on oi.user_id=sui.guid WHERE oi.status=#{type} and oi.product_id=#{productId}
+        <if test="null != keyWord and !''.equals(keyWord)">
+            and (oi.order_id LIKE concat('%',#{keyWord},'%') or sui.username LIKE concat('%',#{keyWord},'%'))
+        </if>
+    </select>
+
+    <select id="getLiveRecord" resultType="java.util.HashMap">
+        select qlr.id,oi.order_id orderId,sui.username userName,sui.nickname,qlr.stu_guid stuGuid,qlr.tea_guid teaGuid,qti.name teaName,qlr.duration_time*1000 durationTime,qlr.text_book_name textBookName,oi.price,oi.product_id productId,oi.buy_live_num buyLiveNum,qlr.start_time startTime,qlr.end_time endTime,sui.phone,IFNULL(qlr.remarks,'') remarks,IFNULL(qlr.entry,'') entry
+        from qt_live_record qlr left join sys_user_info sui on sui.guid=qlr.stu_guid left join qt_teacher_info qti on qti.guid=qlr.tea_guid left join order_info oi on oi.order_id=qlr.order_id where qlr.end_time!=0
+        <if test="null != keyWord and !''.equals(keyWord)">
+            and (oi.order_id LIKE concat('%',#{keyWord},'%') or sui.username LIKE concat('%',#{keyWord},'%') or qti.name LIKE concat('%',#{keyWord},'%') or qlr.entry like concat('%',#{keyWord},'%'))
+        </if>
+    </select>
+
+    <update id="updateLiveRecordRemark">
+        UPDATE qt_live_record SET remarks=#{remarks} where id=#{liveRecordId}
+    </update>
+</mapper>

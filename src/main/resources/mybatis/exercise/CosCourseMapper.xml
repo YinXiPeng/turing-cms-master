@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bonc.turing.cms.exercise.dao.mapper.CosCourseMapper">
+
+    <select id="getCmsCourseList" resultType="com.bonc.turing.cms.exercise.dto.CmsCourseDTO">
+        SELECT cos_course.id,name,author_name as authorName,status,UNIX_TIMESTAMP(create_time)*1000 as createTime,if(price>0,0,1) as isFree, form
+        <if test="type == 1">
+            ,csc.id as schoolCourseId, csc.state as state
+        </if>
+        from cos_course
+        <if test="type == 1">
+            left join cos_school_course csc on cos_course.id = csc.course_id
+        </if>
+        where 1=1
+        <if test="type == 1">
+            and ((create_by_id = #{guid} and (type = 1 )) or (cos_course.form = 5 and csc.school_id = #{schoolId} and cos_course.status = 1))
+        </if>
+        <if test="type == 2">
+            and type = 2
+        </if>
+        <if test="type == 3">
+            and form = #{form}
+        </if>
+        and is_deleted = 0
+        ORDER BY create_time desc
+    </select>
+
+</mapper>

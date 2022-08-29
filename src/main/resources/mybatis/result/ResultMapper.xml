@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bonc.turing.cms.manage.mapper.result.ResultMapper">
+
+	<resultMap id="TotalScoreRankMsg" type="java.util.HashMap">
+		<result column="filePaths" property="filePaths" typeHandler="com.bonc.turing.cms.manage.handler.BlobTypeHandler"/>
+	</resultMap>
+	<select id="getRankOfIndividualCompetitionByCompetitionId" resultType="java.util.Map">
+	    (SELECT sji.job_status jobStatus,sji.job_logs jobLogs,nb.notebook_name notebookName,nb.notebook_path notebookPath,nb.notebook_id notebookId,sui.guid,sui.headimgurl,sui.username,'-1' AS score,'' AS resultId
+		FROM d_s_result dsr LEFT JOIN notebook_result nr ON dsr.id=nr.result_id AND nr.result_type='A'
+		LEFT JOIN service_job_info sji ON sji.job_suffix=nr.notebook_id
+		LEFT JOIN notebook nb ON nb.notebook_id=sji.job_suffix
+		LEFT JOIN sys_user_info sui ON sui.guid=nb.guid
+		WHERE dsr.competition_info_id='${competitionId}' AND dsr.list_type='A' AND dsr.final_submit='1' AND sji.id IS NOT NULL)
+		UNION
+		(SELECT '1' AS jobStatus,'' AS jobLogs,nb.notebook_name notebookName,nb.notebook_path notebookPath,nb.notebook_id notebookId,sui.guid,sui.headimgurl,sui.username,ds.scoreb AS score,ds.id AS resultId
+		FROM d_s_result dsr LEFT JOIN notebook_result nr ON dsr.id=nr.result_id AND nr.result_type='A'
+		LEFT JOIN service_job_info sji ON sji.job_suffix=nr.notebook_id
+		LEFT JOIN notebook nb ON nb.notebook_id=nr.notebook_id
+		LEFT JOIN sys_user_info sui ON sui.guid=nb.guid
+		LEFT JOIN d_s_result ds ON ds.list_type='B' AND ds.created_by_id=sui.guid AND ds.competition_info_id='${competitionId}'
+		WHERE dsr.competition_info_id='${competitionId}' AND dsr.list_type='A' AND dsr.final_submit='1' AND sji.id IS NULL
+		) ORDER BY score DESC
+	</select>
+
+	<select id="getRankOfTeamCompetitionByCompetitionId" resultType="java.util.Map">
+		(SELECT sji.job_status jobStatus,sji.job_logs jobLogs,nb.notebook_name notebookName,nb.notebook_path notebookPath,nb.notebook_id notebookId,
+		A.team_name teamName,A.team_logo teamLogo,sui.guid,sui.username,'-1' AS score,'' AS resultId
+		FROM d_s_result dsr LEFT JOIN notebook_result nr ON dsr.id=nr.result_id AND nr.result_type='A'
+		LEFT JOIN service_job_info sji ON sji.job_suffix=nr.notebook_id
+		LEFT JOIN notebook nb ON nb.notebook_id=sji.job_suffix
+		LEFT JOIN
+		(SELECT tmi.guid,ti.team_name,ti.team_logo FROM teams_competition tc LEFT JOIN teams_member_info tmi ON tc.team_id=tmi.teams_info_id
+		LEFT JOIN teams_info ti ON tmi.teams_info_id=ti.id WHERE tc.competition_id='${competitionId}'
+		) A ON nb.guid=A.guid
+		LEFT JOIN sys_user_info sui ON sui.guid=nb.guid
+		WHERE dsr.competition_info_id='${competitionId}' AND dsr.list_type='A' AND dsr.final_submit='1' AND sji.id IS NOT NULL)
+		UNION
+		(SELECT '1' AS jobStatus,'' AS jobLogs,nb.notebook_name notebookName,nb.notebook_path notebookPath,nb.notebook_id notebookId,
+		A.team_name teamName,A.team_logo teamLogo,sui.guid,sui.username,ds.scoreb AS score,ds.id AS resultId
+		FROM d_s_result dsr LEFT JOIN notebook_result nr ON dsr.id=nr.result_id AND nr.result_type='A'
+		LEFT JOIN service_job_info sji ON sji.job_suffix=nr.notebook_id
+		LEFT JOIN notebook nb ON nb.notebook_id=nr.notebook_id
+		LEFT JOIN d_s_result ds ON ds.list_type='B' AND ds.created_by_id=nb.guid AND ds.competition_info_id=dsr.competition_info_id
+		LEFT JOIN
+		(SELECT tmi.guid,ti.team_name,ti.team_logo FROM teams_competition tc LEFT JOIN teams_member_info tmi ON tc.team_id=tmi.teams_info_id
+		LEFT JOIN teams_info ti ON tmi.teams_info_id=ti.id WHERE tc.competition_id='${competitionId}'
+		) A ON nb.guid=A.guid
+		LEFT JOIN sys_user_info sui ON sui.guid=nb.guid
+		WHERE dsr.competition_info_id='${competitionId}' AND dsr.list_type='A' AND dsr.final_submit='1' AND sji.id IS NULL
+		) ORDER BY score DESC
+	</select>
+
+	<select id="getTotalScoreRankOfTeamMsg" resultMap="TotalScoreRankMsg">
+		select tmi.teams_info_id id,ti.team_name name,ifnull(0,ccs.total_score) totalScore,dsr.file_paths filePaths,dsr.memo from d_s_result dsr left join
+		teams_competition tc on dsr.competition_info_id=tc.competition_id left join teams_member_info tmi on
+		tmi.guid=dsr.created_by_id and tc.team_id=tmi.teams_info_id
+		left join cms_competition_score ccs on tmi.teams_info_id=ccs.team_id left join teams_info ti on
+		tmi.teams_info_id=ti.id where tc.competition_id=#{competitionId} AND tmi.teams_info_id IS NOT NULL and tmi.is_admin=1
+		<if test='competitionStatus=="5"'>
+			and dsr.stage_type = 'PRELIMINARY'
+		</if>
+		<if test='competitionStatus=="8"'>
+			and dsr.stage_type = 'FINALS'
+		</if>
+		<if test='competitionStatus=="9"'>
+			and dsr.stage_type = 'COMMON'
+		</if>
+		ORDER BY totalScore DESC
+	</select>
+
+	<select id="getTotalScoreRankMsg" resultMap="TotalScoreRankMsg">
+		select sui.guid id,sui.nickname name,ifnull(0,ccs.total_score) totalScore,dsr.file_paths filePaths,dsr.memo from d_s_result dsr left join sys_user_info sui on dsr.created_by_id=sui.guid left join cms_competition_score ccs on ccs.team_id=sui.guid where dsr.competition_info_id
+		<if test='competitionStatus=="5"'>
+			and dsr.stage_type = 'PRELIMINARY'
+		</if>
+		<if test='competitionStatus=="8"'>
+			and dsr.stage_type = 'FINALS'
+		</if>
+		<if test='competitionStatus=="9"'>
+			and dsr.stage_type = 'COMMON'
+		</if>
+		ORDER BY totalScore DESC
+	</select>
+
+</mapper>

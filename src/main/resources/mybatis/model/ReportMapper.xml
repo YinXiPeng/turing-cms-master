@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bonc.turing.cms.manage.mapper.report.ReportMapper">
+
+    <select id="getReportList" resultType="java.util.Map">
+  SELECT
+	*
+FROM
+	(
+SELECT
+	crId AS reportId,
+	unix_timestamp( reportTime ) * 1000 reportTime,
+	informer,
+	type,
+	state,
+	STATUS,
+	user_id AS userId,
+	unix_timestamp( modify_time ) * 1000 modifyTime,
+	admin_guid AS adminGuid,
+	@reportType := 0 AS reportType
+FROM
+	comment_report UNION ALL
+SELECT
+	rrId AS reportId,
+	unix_timestamp( reportTime ) * 1000 reportTime,
+	informer,
+	type,
+	state,
+	STATUS,
+	user_id AS userId,
+	unix_timestamp( modify_time ) * 1000 modifyTime,
+	admin_guid AS adminGuid,
+	@reportType := 1 AS reportType
+FROM
+	reply_report
+	) a
+ORDER BY
+	reportTime DESC
+    </select>
+
+    <select id="getCommentReportById" resultType="java.util.Map">
+        select * from comment_report WHERE crId=#{reportId}
+    </select>
+
+    <select id="getReplyReportById" resultType="java.util.Map">
+        SELECT * from reply_report WHERE rrId=#{reportId}
+    </select>
+
+    <update id="updateCommentStatusToPass">
+        UPDATE comment_report set status=1,modify_time=now(),admin_guid=#{guid} where crId=#{reportId} and (status=0 or status=2)
+    </update>
+
+    <update id="updateReplyStatusToPass">
+        UPDATE reply_report set status=1,modify_time=now(),admin_guid=#{guid} where rrId=#{reportId} and (status=0 or status=2)
+    </update>
+
+    <update id="updateCommentStatusToRefuse">
+        UPDATE comment_report set status=0,modify_time=now(),admin_guid=#{guid} where crId=#{reportId} and (status=1 or status=2)
+    </update>
+
+    <update id="updateReplyStatusToRefuse">
+        UPDATE reply_report set status=0,modify_time=now(),admin_guid=#{guid} where rrId=#{reportId} and (status=1 or status=2)
+    </update>
+
+	<select id="getCommentById" resultType="java.util.Map">
+		SELECT  * from comment where cid=#{reportId}
+	</select>
+
+	<select id="getReplyById" resultType="java.util.Map">
+		SELECT * from reply where rid=#{reportId}
+	</select>
+</mapper>
